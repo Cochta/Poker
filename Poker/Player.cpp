@@ -6,7 +6,6 @@ Player::Player(std::string _name, int _id) {
 void Player::DrawCard(DeckOfCards& _deck) {
 	this->hand.emplace_back(_deck.cards[0]);
 	_deck.cards.erase(_deck.cards.begin());
-	//std::cout << _deck.cards.begin()._Getcont();
 }
 void Player::FillHand(int _nbCard, DeckOfCards& _deck) {
 	for (int i = 0; i < _nbCard; i++)
@@ -31,10 +30,10 @@ std::string Player::ToString() {
 	return string;
 };
 
-int compareCards(Card _card1, Card _card2) {
+int compareCards(Card _card1, Card _card2) {// test qui ne fais pas parti du code, pas besoin de regarder
 	return (int)_card1.GetValue() - (int)_card2.GetValue();
 }
-int Player::evaluateHand() {
+int Player::evaluateHand() { // test qui ne fais pas parti du code, pas besoin de regarder
 	/*std::sort(hand.begin(), hand.end());
 	//std::sort(hand.begin(), 5, hand.size(), compareCards);
 	int straight, flush, three, four, full, pairs;
