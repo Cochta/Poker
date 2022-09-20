@@ -1,10 +1,11 @@
 #include "Card.h"
 
-Card::Card(Suit _suit, Value _value) {
+Card::Card(Suit _suit, Value _value) { // default and only constructor 
 	this->suit = _suit;
 	this->value = _value;
 }
-std::string Card::suitToString()
+
+std::string Card::suitToString() // return the suit as a string
 {
 	switch (GetSuit())
 	{
@@ -22,7 +23,7 @@ std::string Card::suitToString()
 }
 
 
-std::string Card::valueToString()
+std::string Card::valueToString()// return the value as a string
 {
 	switch (GetValue())
 	{
@@ -56,6 +57,7 @@ std::string Card::valueToString()
 		return "Unknown";
 	}
 }
-std::string Card::ToString() {
+
+std::string Card::ToString() {// return the value and the suit as a string
 	return valueToString() + " of " + suitToString();
 }

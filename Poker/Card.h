@@ -7,6 +7,7 @@ enum class Suit {
 	DIAMONDS,
 	enumEnd
 };
+
 enum class Value {
 	TWO = 2,
 	THREE = 3,
@@ -23,20 +24,26 @@ enum class Value {
 	ACE = 14,
 	enumEnd
 };
+
 class Card
 {
 public:
-	Card(Suit, Value);
+	Card(Suit, Value);// default and only constructor 
+
 private:
-	std::string suitToString();
-	std::string valueToString();
+	std::string suitToString();// return the suit as a string
+	std::string valueToString();// return the value as a string
 	Suit suit;
 	Value value;
+
 public:
-	std::string ToString();
+	std::string ToString();// return the value and the suit as a string
+
 	Suit GetSuit() { return suit; };
+	Value GetValue() { return value; };
+
 	void SetSuit(Suit _suit) { suit = _suit; };
 	void SetValue(Value _value) { value = _value; };
-	Value GetValue() { return value; };
+
 };
 

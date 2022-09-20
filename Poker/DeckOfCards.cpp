@@ -1,8 +1,6 @@
 #include "DeckOfCards.h"
 #include <iostream>
-DeckOfCards::DeckOfCards() {
-	//char valueArray[13] = { 2,3,4,5,6,7,8,9,10,'J','Q','K','A' };
-	//std::string symbolArray[4] = { "Pike", "Trèfle", "Carreau","Coeur" };
+DeckOfCards::DeckOfCards() { // default and only constructor
 	for (int suit = (int)Suit::CLUBS; suit < (int)Suit::enumEnd; suit++)
 	{
 		for (int value = (int)Value::TWO; value < (int)Value::enumEnd; value++)
@@ -11,10 +9,12 @@ DeckOfCards::DeckOfCards() {
 		}
 	}
 }
-void DeckOfCards::Shuffle() {
+
+void DeckOfCards::Shuffle() { // shuffles the deck (the vector) randomly
 	std::shuffle(this->cards.begin(), this->cards.end(), std::random_device());
 }
-std::string DeckOfCards::ToString() {
+
+std::string DeckOfCards::ToString() { // returns all cards in the deck as a string
 	std::string string = "The deck contains the following cards: \n";
 	for (Card card : this->cards)
 	{

@@ -1,18 +1,24 @@
 #include "Player.h"
-Player::Player(std::string _name, int _id) {
+#include <iostream>
+#include<stdio.h>
+
+Player::Player(std::string _name, int _id) {// default and only constructor
 	this->name = _name;
 	this->id = _id;
 };
-void Player::DrawCard(DeckOfCards& _deck) {
+
+void Player::DrawCard(DeckOfCards& _deck) {// takes 1 card from the deck
 	this->hand.emplace_back(_deck.cards[0]);
 	_deck.cards.erase(_deck.cards.begin());
 }
-void Player::FillHand(int _nbCard, DeckOfCards& _deck) {
+
+void Player::FillHand(int _nbCard, DeckOfCards& _deck) { // gives x number of cards to the player
 	for (int i = 0; i < _nbCard; i++)
 	{
 		DrawCard(_deck);
 	}
 };
+
 void Player::ClearHand(DeckOfCards& _deck) {
 	for (Card card : this->hand)
 	{
@@ -20,72 +26,110 @@ void Player::ClearHand(DeckOfCards& _deck) {
 	}
 	this->hand.clear();
 };
-std::string Player::ToString() {
+
+std::string Player::ToString() {// returns all cards in the hand as a string
 	std::string string = "Player " + this->name + " cards are:\n";
 	for (Card card : this->hand)
 	{
 		string += card.ToString() + "\n";
 	}
-	string += "\n";
+	string += "He got a " + HandRankToString() + "\n" + "\n";
+
 	return string;
 };
 
 int compareCards(Card _card1, Card _card2) {// test qui ne fais pas parti du code, pas besoin de regarder
 	return (int)_card1.GetValue() - (int)_card2.GetValue();
 }
-int Player::evaluateHand() { // test qui ne fais pas parti du code, pas besoin de regarder
-	/*std::sort(hand.begin(), hand.end());
-	//std::sort(hand.begin(), 5, hand.size(), compareCards);
-	int straight, flush, three, four, full, pairs;
-	int k;
 
-	straight = flush = three = four = full = pairs = 0;
-	k = 0;
+void Player::Sort() {
+	struct Xgreater
+	{
+		bool operator()(Card& lx, Card& rx) const {
+			return lx.GetValue() < rx.GetValue();
+		}
+	};
+	std::sort(hand.begin(), hand.end(), Xgreater());
+};
 
-	//checks for flush
-	while (k < 4 && hand[k].GetSuit() == hand[k + 1].GetSuit())
-		k++;
-	if (k == 4)
-		flush = 1;
+HandRank Player::EvaluateHand() {  // C'EST DEGEULASSE PUTIN JE SAIS PAS CODER
+	Sort();
+	int straight = 0;
+	int flush = 0;
 
-	// checks for straight
-	k = 0;
-	while (k < 4 && (int)hand[k].GetValue() == (int)hand[k + 1].GetValue() - 1)
-		k++;
-	if (k == 4)
-		straight = 1;
-
-	// checks for fours 
-	for (int i = 0; i < 2; i++) {
-		k = i;
-		while (k < i + 3 && hand[k].GetValue() == hand[k + 1].GetValue())
-			k++;
-		if (k == i + 3)
-			four = 1;
+	for (int i = 0; i < hand.size(); i++)// detect if flush
+	{
+		if (hand[0].GetSuit() == hand[i].GetSuit())
+			flush++;
 	}
 
-	//checks for threes and fullhouse
-	if (!four) {
-		for (int i = 0; i < 3; i++) {
-			k = i;
-			while (k < i + 2 && hand[k].GetValue() == hand[k + 1].GetValue())
-				k++;
-			if (k == i + 2) {
-				three = 1;
-				if (i == 0) {
-					if (hand[3].GetValue() == hand[4].GetValue())
-						full = 1;
-				}
-				else if (i == 1) {
-					if (hand[0].GetValue() == hand[4].GetValue())
-						full = 1;
-				}
-				else {
-					if (hand[0].GetValue() == hand[1].GetValue())
-						full = 1;
-				}
+	for (int i = 0; i < hand.size(); i++)// detect if straight
+	{
+		if ((int)hand[0].GetValue() == (int)hand[i].GetValue() - i)
+			straight++;
+	}
+
+	std::vector<int> pairs; // très laid
+	for (int i = 0; i < hand.size(); i++)// detects number of pairs three of a kind and four of a kind
+	{
+		pairs.emplace_back(0);
+		for (int j = 0; j < hand.size(); j++)
+		{
+			if (hand[i].GetValue() == hand[j].GetValue())
+			{
+				pairs[i] += 1;
 			}
 		}
-	}*/
-	return 0;
+	}
+	std::sort(pairs.rbegin(), pairs.rend());
+	if (straight == 5 && flush == 5 && hand[4].GetValue() == Value::ACE)
+		return HandRank::ROYALFLUSH;
+	else if (straight == 5 && flush == 5)
+		return HandRank::STRAIGHTFLUSH;
+	else if (pairs[0] == 4)
+		return HandRank::FOUROFAKIND;
+	else if (pairs[0] == 3 && pairs[3] == 2)
+		return HandRank::FULLHOUSE;
+	else if (flush == 5)
+		return HandRank::FLUSH;
+	else if (straight == 5)
+		return HandRank::STRAIGHT;
+	else if (pairs[0] == 3)
+		return HandRank::THREEOFAKIND;
+	else if (pairs[0] == 2 && pairs[3] == 2)
+		return HandRank::TWOPAIR;
+	else if (pairs[0] == 2)
+		return HandRank::PAIR;
+	else
+		return HandRank::HIGHCARD;
+
 }
+std::string Player::HandRankToString()// return the hand ranking as a string
+{
+	switch (EvaluateHand())
+	{
+	case HandRank::HIGHCARD:
+		return "high card";
+	case HandRank::PAIR:
+		return "pair";
+	case HandRank::TWOPAIR:
+		return "two pairs";
+	case HandRank::THREEOFAKIND:
+		return "three of a kind";
+	case HandRank::STRAIGHT:
+		return "straight";
+	case HandRank::FLUSH:
+		return "flush";
+	case HandRank::FULLHOUSE:
+		return "full house";
+	case HandRank::FOUROFAKIND:
+		return "four of a kind";
+	case HandRank::STRAIGHTFLUSH:
+		return "straight flush";
+	case HandRank::ROYALFLUSH:
+		return "royal flush";
+	default:
+		return "Unknown";
+	}
+}
+
