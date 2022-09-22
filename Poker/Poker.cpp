@@ -38,7 +38,24 @@ bool isGreaterPattern(Player _p1, Player _p2)
 
 bool isPatternEqual(Player _p1, Player _p2)
 {
-	return _p1.pattern.patternRank == _p2.pattern.patternRank;
+	if (_p1.pattern.patternRank == HandRank::HIGHCARD && _p1.pattern.patternRank == _p2.pattern.patternRank)
+	{
+		for (int i = 4; i > 0; i--)
+		{
+			std::cout << (int)_p1.hand[i].GetValue() << " - " << (int)_p2.hand[i].GetValue() << std::endl;
+			if ((int)_p1.hand[i].GetValue() == (int)_p2.hand[i].GetValue())
+			{
+				continue;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	// reste à incrémenter les autres possibilités je n'ai pas le temps de faire maintenant
+	return false;
 }
 
 std::string GetWinner(std::vector<Player> _players) {
@@ -52,18 +69,18 @@ std::string GetWinner(std::vector<Player> _players) {
 	bestPlayer.hand.push_back(Card(Suit::HEARTS, Value::SEVEN));
 	for (Player player : _players)
 	{
-		if (isGreaterPattern(player, bestPlayer))
+		if (isPatternEqual(player, bestPlayer))
 		{
-
+			winners.emplace_back(player);
+		}
+		else if (isGreaterPattern(player, bestPlayer))
+		{
 			bestPlayer = player;
 			bestPlayer.hand = player.hand;
 			bestPlayer.pattern = player.pattern;
 			winners = { bestPlayer };
 		}
-		/*else if (isPatternEqual(player, bestPlayer))
-		{
-			winners.emplace_back(player);
-		}*/
+
 	}
 
 	std::string winnerStr = "And the winner is: ";
