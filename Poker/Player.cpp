@@ -1,6 +1,8 @@
 #include "Player.h"
 #include <iostream>
-#include<stdio.h>
+#include <stdio.h>
+#include <map>
+#include <algorithm>
 
 Player::Player(std::string _name, int _id) {// default and only constructor
 	this->name = _name;
@@ -17,6 +19,7 @@ void Player::FillHand(int _nbCard, DeckOfCards& _deck) { // gives x number of ca
 	{
 		DrawCard(_deck);
 	}
+	EvaluateHand();
 };
 
 void Player::ClearHand(DeckOfCards& _deck) {
@@ -33,14 +36,10 @@ std::string Player::ToString() {// returns all cards in the hand as a string
 	{
 		string += card.ToString() + "\n";
 	}
-	string += "He got a " + HandRankToString() + "\n" + "\n";
+	string += "He got a " + this->pattern.HandRankToString() + "\n" + "\n";
 
 	return string;
 };
-
-int compareCards(Card _card1, Card _card2) {// test qui ne fais pas parti du code, pas besoin de regarder
-	return (int)_card1.GetValue() - (int)_card2.GetValue();
-}
 
 void Player::Sort() {
 	struct Xgreater
@@ -49,25 +48,143 @@ void Player::Sort() {
 			return lx.GetValue() < rx.GetValue();
 		}
 	};
-	std::sort(hand.begin(), hand.end(), Xgreater());
+	std::sort(this->hand.begin(), this->hand.end(), Xgreater());
 };
 
-HandRank Player::EvaluateHand() {  // C'EST DEGEULASSE PUTIN JE SAIS PAS CODER
+bool ValueIsEqual(Card _card1, Card _card2) {
+	return _card1.GetValue() == _card2.GetValue();
+}
+
+int CardCountValue(std::vector<Card> _myVector, Value _myValue) {
+	int iteration = 0;
+	for (auto& card : _myVector)
+	{
+		if (card.GetValue() == _myValue)
+		{
+			iteration++;
+		}
+	}
+	return iteration;
+};
+void Player::EvaluateHand() {  // C'EST DEGEULASSE PUTIN JE SAIS PAS CODER
 	Sort();
 	int straight = 0;
 	int flush = 0;
+	bool four = false, full = false, three = false, twoPairs = false, pair = false;
 
-	for (int i = 0; i < hand.size(); i++)// detect if flush
+	for (int i = 0; i < hand.size(); i++)// detect if flush and suit
 	{
 		if (hand[0].GetSuit() == hand[i].GetSuit())
 			flush++;
-	}
-
-	for (int i = 0; i < hand.size(); i++)// detect if straight
-	{
 		if ((int)hand[0].GetValue() == (int)hand[i].GetValue() - i)
 			straight++;
 	}
+	if (straight == 5 && flush == 5 && hand[4].GetValue() == Value::ACE) // straight flush
+	{
+		pattern = Pattern(HandRank::ROYALFLUSH);
+		return;
+	}
+	else if (straight == 5 && flush == 5)
+	{
+		pattern = Pattern(HandRank::STRAIGHTFLUSH, hand[4].GetValue());
+		return;
+	}
+	else if (flush == 5)
+	{
+		pattern = Pattern(HandRank::FLUSH);
+	}
+	else if (straight == 5)
+	{
+		pattern = Pattern(HandRank::STRAIGHT, hand[4].GetValue());
+	}
+
+	std::map<Value, int> countValue;
+	std::map<Suit, int> countSuit;
+
+	for (auto& card1 : hand)
+	{
+		int cntV = 0;
+		int cntS = 0;
+		for (auto& card2 : hand)
+		{
+			if (card1.GetValue() == card2.GetValue())
+			{
+				cntV++;
+			}
+		}
+		countValue[card1.GetValue()] = cntV;
+		countSuit[card1.GetSuit()] = cntS;
+	}
+	for (auto val : countValue)
+	{
+#pragma region Four of a kind
+
+		if (val.second == 4)
+		{
+			for (auto& val2 : countValue)
+			{
+				if (val != val2)
+				{
+					pattern = Pattern(HandRank::FOUROFAKIND, val.first, val2.first);
+					return;
+				}
+			}
+
+		}
+#pragma endregion 
+
+#pragma region Full house and three of a kind
+		if (val.second == 3)
+		{
+			for (auto& val2 : countValue)
+			{
+				if (val2.second == 2)
+				{
+					pattern = Pattern(HandRank::FULLHOUSE, val.first, val2.first);
+					return;
+				}
+				if (val2.second == 1)
+				{
+					for (auto& val3 : countValue)
+					{
+						if (val2 != val3)
+						{
+							pattern = Pattern(HandRank::THREEOFAKIND, val.first, val2.first, val3.first);
+							return;
+						}
+					}
+				}
+			}
+		}
+#pragma endregion
+
+#pragma region pairs and two pairs
+		if (val.second == 2)
+		{
+			for (auto& val2 : countValue)
+			{
+				if (val != val2 && val2.second == 2)
+				{
+					for (auto& val3 : countValue)
+					{
+						if (val3.second == 1)
+						{
+							pattern = Pattern(HandRank::TWOPAIR, val.first, val2.first, val3.first);
+							return;
+						}
+					}
+
+				}
+			}
+			pattern = Pattern(HandRank::PAIR, val.first);
+			return;
+		}
+#pragma endregion
+	}
+
+	pattern = Pattern(HandRank::HIGHCARD);
+	return;
+
 
 	std::vector<int> pairs; // très laid
 	for (int i = 0; i < hand.size(); i++)// detects number of pairs three of a kind and four of a kind
@@ -81,55 +198,4 @@ HandRank Player::EvaluateHand() {  // C'EST DEGEULASSE PUTIN JE SAIS PAS CODER
 			}
 		}
 	}
-	std::sort(pairs.rbegin(), pairs.rend());
-	if (straight == 5 && flush == 5 && hand[4].GetValue() == Value::ACE)
-		return HandRank::ROYALFLUSH;
-	else if (straight == 5 && flush == 5)
-		return HandRank::STRAIGHTFLUSH;
-	else if (pairs[0] == 4)
-		return HandRank::FOUROFAKIND;
-	else if (pairs[0] == 3 && pairs[3] == 2)
-		return HandRank::FULLHOUSE;
-	else if (flush == 5)
-		return HandRank::FLUSH;
-	else if (straight == 5)
-		return HandRank::STRAIGHT;
-	else if (pairs[0] == 3)
-		return HandRank::THREEOFAKIND;
-	else if (pairs[0] == 2 && pairs[3] == 2)
-		return HandRank::TWOPAIR;
-	else if (pairs[0] == 2)
-		return HandRank::PAIR;
-	else
-		return HandRank::HIGHCARD;
-
 }
-std::string Player::HandRankToString()// return the hand ranking as a string
-{
-	switch (EvaluateHand())
-	{
-	case HandRank::HIGHCARD:
-		return "high card";
-	case HandRank::PAIR:
-		return "pair";
-	case HandRank::TWOPAIR:
-		return "two pairs";
-	case HandRank::THREEOFAKIND:
-		return "three of a kind";
-	case HandRank::STRAIGHT:
-		return "straight";
-	case HandRank::FLUSH:
-		return "flush";
-	case HandRank::FULLHOUSE:
-		return "full house";
-	case HandRank::FOUROFAKIND:
-		return "four of a kind";
-	case HandRank::STRAIGHTFLUSH:
-		return "straight flush";
-	case HandRank::ROYALFLUSH:
-		return "royal flush";
-	default:
-		return "Unknown";
-	}
-}
-

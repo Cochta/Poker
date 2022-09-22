@@ -29,10 +29,10 @@ class Card
 {
 public:
 	Card(Suit, Value);// default and only constructor 
-
-private:
 	std::string suitToString();// return the suit as a string
 	std::string valueToString();// return the value as a string
+private:
+
 	Suit suit;
 	Value value;
 

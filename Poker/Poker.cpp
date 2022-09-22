@@ -4,9 +4,79 @@
 #include "DeckOfCards.h"
 #include "Player.h"
 #include <cstdlib>
-#include <regex>
 
+struct GreaterRank
+{
+	bool operator()(Player& lx, Player& rx) const {
+		return lx.pattern.patternRank > rx.pattern.patternRank;
+	}
+};
+bool isGreaterPattern(Player _p1, Player _p2)
+{
+	if (_p1.pattern.patternRank != _p2.pattern.patternRank)
+	{
+		return _p1.pattern.patternRank > _p2.pattern.patternRank;
+	}
+	else if (_p1.pattern.patternRank == HandRank::HIGHCARD && _p1.pattern.patternRank == _p2.pattern.patternRank)
+	{
+		for (int i = 4; i > 0; i--)
+		{
+			std::cout << (int)_p1.hand[i].GetValue() << " - " << (int)_p2.hand[i].GetValue() << std::endl;
+			if ((int)_p1.hand[i].GetValue() == (int)_p2.hand[i].GetValue())
+			{
+				continue;
+			}
+			else
+			{
+				return (int)_p1.hand[i].GetValue() > (int)_p2.hand[i].GetValue();
+			}
+		}
+	}
+	return false;
+	// reste à incrémenter les autres possibilités je n'ai pas le temps de faire maintenant
+}
 
+bool isPatternEqual(Player _p1, Player _p2)
+{
+	return _p1.pattern.patternRank == _p2.pattern.patternRank;
+}
+
+std::string GetWinner(std::vector<Player> _players) {
+	std::vector<Player> winners;
+	Player bestPlayer = Player("Default", 14);
+	bestPlayer.pattern = Pattern(HandRank::HIGHCARD);
+	bestPlayer.hand.push_back(Card(Suit::enumEnd, Value::TWO));
+	bestPlayer.hand.push_back(Card(Suit::DIAMONDS, Value::FOUR));
+	bestPlayer.hand.push_back(Card(Suit::SPADES, Value::FIVE));
+	bestPlayer.hand.push_back(Card(Suit::CLUBS, Value::SIX));
+	bestPlayer.hand.push_back(Card(Suit::HEARTS, Value::SEVEN));
+	for (Player player : _players)
+	{
+		if (isGreaterPattern(player, bestPlayer))
+		{
+
+			bestPlayer = player;
+			bestPlayer.hand = player.hand;
+			bestPlayer.pattern = player.pattern;
+			winners = { bestPlayer };
+		}
+		/*else if (isPatternEqual(player, bestPlayer))
+		{
+			winners.emplace_back(player);
+		}*/
+	}
+
+	std::string winnerStr = "And the winner is: ";
+	if (winners.size() > 1)
+	{
+		winnerStr = "Their is a draw betwin: ";
+	}
+	for (auto& i : winners)
+	{
+		winnerStr += i.GetName() + ", ";
+	}
+	return winnerStr;
+}
 int main()
 {
 	const int NB_CARDS = 5;
@@ -28,17 +98,19 @@ int main()
 	}
 
 	/*Player bernard = Player("bernard", 0);
-	Card card1 = Card(Suit::CLUBS, Value::ACE);
-	Card card2 = Card(Suit::CLUBS, Value::KING);
-	Card card3 = Card(Suit::CLUBS, Value::JACK);
-	Card card4 = Card(Suit::CLUBS, Value::TEN);
-	Card card5 = Card(Suit::CLUBS, Value::QUEEN);
+	Card card1 = Card(Suit::DIAMONDS, Value::TWO);
+	Card card2 = Card(Suit::CLUBS, Value::NINE);
+	Card card3 = Card(Suit::CLUBS, Value::TWO);
+	Card card4 = Card(Suit::CLUBS, Value::FIVE);
+	Card card5 = Card(Suit::CLUBS, Value::THREE);
 	bernard.hand.emplace_back(card1);
 	bernard.hand.emplace_back(card2);
 	bernard.hand.emplace_back(card3);
 	bernard.hand.emplace_back(card4);
 	bernard.hand.emplace_back(card5);
-	players.emplace_back(bernard);*/
+	players.emplace_back(bernard);
+	bernard.EvaluateHand();
+	std::cout << bernard.pattern.HandRankToString();*/
 
 	std::string newgame = "y";
 	while (newgame != "n")
@@ -47,14 +119,15 @@ int main()
 		DeckOfCards myDeck;
 		myDeck.Shuffle();
 
-		for (Player player : players)//each player picks 5 cards 
+		for (Player& player : players)//each player picks 5 cards 
 		{
 			player.FillHand(NB_CARDS, myDeck);
-			player.Sort();
+
 			std::cout << player.ToString();
 		}
+		std::cout << GetWinner(players) << std::endl;
 
-		for (Player player : players)// each player puts his cards back into the deck
+		for (Player& player : players)// each player puts his cards back into the deck
 		{
 			player.ClearHand(myDeck);
 		}
