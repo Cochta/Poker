@@ -34,20 +34,22 @@ std::string Player::ToString() {// returns all cards in the hand as a string
 	std::string string = "Player " + this->name + " cards are:\n";
 	for (Card card : this->hand)
 	{
-		string += card.ToString() + "\n";
+		string += card.ToString() + " \n";
 	}
 	string += "He got a " + this->pattern.HandRankToString() + "\n" + "\n";
 
 	return string;
 };
 
+struct Xgreater
+{
+	bool operator()(Card& lx, Card& rx) const {
+		return lx.GetValue() < rx.GetValue();
+	}
+};
+
 void Player::Sort() {
-	struct Xgreater
-	{
-		bool operator()(Card& lx, Card& rx) const {
-			return lx.GetValue() < rx.GetValue();
-		}
-	};
+
 	std::sort(this->hand.begin(), this->hand.end(), Xgreater());
 };
 
@@ -55,18 +57,7 @@ bool ValueIsEqual(Card _card1, Card _card2) {
 	return _card1.GetValue() == _card2.GetValue();
 }
 
-int CardCountValue(std::vector<Card> _myVector, Value _myValue) {
-	int iteration = 0;
-	for (auto& card : _myVector)
-	{
-		if (card.GetValue() == _myValue)
-		{
-			iteration++;
-		}
-	}
-	return iteration;
-};
-void Player::EvaluateHand() {  // C'EST DEGEULASSE PUTIN JE SAIS PAS CODER
+void Player::EvaluateHand() {
 	Sort();
 	int straight = 0;
 	int flush = 0;
@@ -169,7 +160,11 @@ void Player::EvaluateHand() {  // C'EST DEGEULASSE PUTIN JE SAIS PAS CODER
 					{
 						if (val3.second == 1)
 						{
-							pattern = Pattern(HandRank::TWOPAIR, val.first, val2.first, val3.first);
+							std::vector<Value> bestpair;
+							bestpair.emplace_back(val.first);
+							bestpair.emplace_back(val2.first);
+							std::sort(bestpair.begin(), bestpair.end());
+							pattern = Pattern(HandRank::TWOPAIR, bestpair[0], bestpair[1], val3.first);
 							return;
 						}
 					}

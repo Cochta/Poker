@@ -11,38 +11,98 @@ struct GreaterRank
 		return lx.pattern.patternRank > rx.pattern.patternRank;
 	}
 };
+
+struct Xgreater
+{
+	bool operator()(Card& lx, Card& rx) const {
+		return lx.GetValue() < rx.GetValue();
+	}
+};
+
 bool isGreaterPattern(Player _p1, Player _p2)
 {
 	if (_p1.pattern.patternRank != _p2.pattern.patternRank)
 	{
 		return _p1.pattern.patternRank > _p2.pattern.patternRank;
 	}
-	else if (_p1.pattern.patternRank == HandRank::HIGHCARD && _p1.pattern.patternRank == _p2.pattern.patternRank)
+	else if ((_p1.pattern.patternRank == HandRank::HIGHCARD || _p1.pattern.patternRank == HandRank::FLUSH) && _p1.pattern.patternRank == _p2.pattern.patternRank)//HIGHCARD / FLUSH
 	{
 		for (int i = 4; i > 0; i--)
 		{
-			std::cout << (int)_p1.hand[i].GetValue() << " - " << (int)_p2.hand[i].GetValue() << std::endl;
-			if ((int)_p1.hand[i].GetValue() == (int)_p2.hand[i].GetValue())
+			if (_p1.hand[i].GetValue() == _p2.hand[i].GetValue())
 			{
 				continue;
 			}
 			else
 			{
-				return (int)_p1.hand[i].GetValue() > (int)_p2.hand[i].GetValue();
+				return _p1.hand[i].GetValue() > _p2.hand[i].GetValue();
 			}
 		}
 	}
+	else if (_p1.pattern.patternRank == HandRank::PAIR && _p1.pattern.patternRank == _p2.pattern.patternRank)//PAIR
+	{
+		if (_p1.pattern.firstCard == _p2.pattern.firstCard)
+		{
+			std::vector<Card> p1Cards;
+			std::vector<Card> p2Cards;
+			for (auto _card : _p1.hand)
+			{
+				if (_card.GetValue() != _p1.pattern.firstCard)
+				{
+					p1Cards.emplace_back(_card);
+				}
+			}
+			for (auto _card : _p2.hand)
+			{
+				if (_card.GetValue() != _p2.pattern.firstCard)
+				{
+					p2Cards.emplace_back(_card);
+				}
+			}
+			std::sort(p1Cards.begin(), p1Cards.end(), Xgreater());
+			std::sort(p1Cards.begin(), p1Cards.end(), Xgreater());
+			for (int i = 2; i > 0; i--)
+			{
+				if (p1Cards[i].GetValue() == p2Cards[i].GetValue())
+				{
+					continue;
+				}
+				else
+				{
+					return p1Cards[i].GetValue() > p2Cards[i].GetValue();
+				}
+			}
+		}
+		return _p1.pattern.firstCard > _p2.pattern.firstCard;
+	}
+	else if ((_p1.pattern.patternRank == HandRank::TWOPAIR || _p1.pattern.patternRank == HandRank::THREEOFAKIND || _p1.pattern.patternRank == HandRank::FULLHOUSE || _p1.pattern.patternRank == HandRank::FOUROFAKIND) && _p1.pattern.patternRank == _p2.pattern.patternRank)//TWOPAIR | THREEOFAKIND |fullhouse | FOUROFAKIND
+	{
+		if (_p1.pattern.firstCard != _p2.pattern.firstCard)
+		{
+			return _p1.pattern.firstCard > _p2.pattern.firstCard;
+		}
+		else if (_p1.pattern.secondCard != _p2.pattern.secondCard)
+		{
+			return _p1.pattern.secondCard > _p2.pattern.secondCard;
+		}
+		else if (_p1.pattern.thirdCard != _p2.pattern.thirdCard)
+		{
+			return _p1.pattern.thirdCard > _p2.pattern.thirdCard;
+		}
+	}
+	else if ((_p1.pattern.patternRank == HandRank::STRAIGHT || _p1.pattern.patternRank == HandRank::STRAIGHTFLUSH) && _p1.pattern.patternRank == _p2.pattern.patternRank)//STRAIGHT | straightflush
+	{
+		return _p1.hand[4].GetValue() > _p1.hand[4].GetValue();
+	}
 	return false;
-	// reste à incrémenter les autres possibilités je n'ai pas le temps de faire maintenant
 }
 
 bool isPatternEqual(Player _p1, Player _p2)
 {
-	if (_p1.pattern.patternRank == HandRank::HIGHCARD && _p1.pattern.patternRank == _p2.pattern.patternRank)
+	if (_p1.pattern.patternRank == _p2.pattern.patternRank)
 	{
 		for (int i = 4; i > 0; i--)
 		{
-			std::cout << (int)_p1.hand[i].GetValue() << " - " << (int)_p2.hand[i].GetValue() << std::endl;
 			if ((int)_p1.hand[i].GetValue() == (int)_p2.hand[i].GetValue())
 			{
 				continue;
@@ -54,7 +114,6 @@ bool isPatternEqual(Player _p1, Player _p2)
 		}
 		return true;
 	}
-	// reste à incrémenter les autres possibilités je n'ai pas le temps de faire maintenant
 	return false;
 }
 
@@ -94,6 +153,7 @@ std::string GetWinner(std::vector<Player> _players) {
 	}
 	return winnerStr;
 }
+
 int main()
 {
 	const int NB_CARDS = 5;
@@ -114,21 +174,6 @@ int main()
 		players.emplace_back(Player(name, i));
 	}
 
-	/*Player bernard = Player("bernard", 0);
-	Card card1 = Card(Suit::DIAMONDS, Value::TWO);
-	Card card2 = Card(Suit::CLUBS, Value::NINE);
-	Card card3 = Card(Suit::CLUBS, Value::TWO);
-	Card card4 = Card(Suit::CLUBS, Value::FIVE);
-	Card card5 = Card(Suit::CLUBS, Value::THREE);
-	bernard.hand.emplace_back(card1);
-	bernard.hand.emplace_back(card2);
-	bernard.hand.emplace_back(card3);
-	bernard.hand.emplace_back(card4);
-	bernard.hand.emplace_back(card5);
-	players.emplace_back(bernard);
-	bernard.EvaluateHand();
-	std::cout << bernard.pattern.HandRankToString();*/
-
 	std::string newgame = "y";
 	while (newgame != "n")
 	{
@@ -139,7 +184,6 @@ int main()
 		for (Player& player : players)//each player picks 5 cards 
 		{
 			player.FillHand(NB_CARDS, myDeck);
-
 			std::cout << player.ToString();
 		}
 		std::cout << GetWinner(players) << std::endl;

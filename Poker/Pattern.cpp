@@ -5,6 +5,7 @@ Pattern::Pattern(HandRank _rank, Value _value1, Value _value2, Value _value3) {
 	secondCard = _value2;
 	thirdCard = _value3;
 }
+
 std::string Pattern::HandRankToString()// return the hand ranking as a string
 {
 	switch (patternRank)
